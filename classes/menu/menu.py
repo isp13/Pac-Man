@@ -1,6 +1,5 @@
 import pygame
-import os
-from pygame.locals import *
+import sys
 
 
 class Menu():
@@ -11,12 +10,8 @@ class Menu():
         self.screen_height = screen_height
         self.pygame = pygame
         self.file = 'classes/menu/music.wav'
-
-
-        self.font = 'Retro.ttf'
+        self.font = 'classes/menu/Retro.ttf'
         self.bg = pygame.image.load("classes/menu/background.jpg")
-
-
         self.scoreboard = False
         self.menu = False
         self.white = (255, 255, 255)
@@ -78,9 +73,24 @@ class Menu():
             self.pygame.display.set_caption("Pacman menu")
 
     def score_board(self, scores):
+
+        File = open("results.txt", "r+")
+        results = set()
+        for line in File:
+            try:
+                results.add(int(line))
+            except ValueError:
+                pass
+        results.add(int(scores))
+        results = list(results)
+        results.sort(reverse=True)
+        File.writelines("\n"+scores + '\n')
+        scores = int(scores)
+        File.close()
+
         self.pygame.mixer.music.play(-1)
         self.scoreboard = True
-        selected = "menu"
+        selected = "restart"
         self.bg = pygame.transform.scale(self.bg, (self.screen_width, self.screen_height))
         while self.scoreboard:
             for event in self.pygame.event.get():
@@ -91,30 +101,55 @@ class Menu():
                     if event.key == self.pygame.K_UP or event.key == self.pygame.K_w:
                         selected = "restart"
                     elif event.key == self.pygame.K_DOWN or event.key == self.pygame.K_s:
-                        selected = "menu"
+                        selected = "quit"
                     if event.key == self.pygame.K_RETURN:
                         if selected == "restart":
                             self.scoreboard = False
-                        if selected == "menu":
-                            self.scoreboard = False
+                            self.start = True
+                        if selected == "quit":
+                            sys.exit()
 
             self.screen.blit(self.bg, (0, 0))
-            title = self.text_format("SCORES: " + scores, self.font, 130, self.yellow)
-            if selected == "start":
+            title = self.text_format("RESULT: " + str(scores), self.font, 130, self.yellow)
+            if selected == "restart":
                 text_start = self.text_format("restart", self.font, 75, self.yellow)
             else:
                 text_start = self.text_format("restart", self.font, 75, self.gray)
-            if selected == "menu":
-                text_quit = self.text_format("menu", self.font, 75, self.yellow)
+            if selected == "quit":
+                text_quit = self.text_format("quit", self.font, 75, self.yellow)
             else:
-                text_quit = self.text_format("menu", self.font, 75, self.gray)
+                text_quit = self.text_format("quit", self.font, 75, self.gray)
 
+            besttext = self.text_format("high scores", self.font, 65, self.yellow)
+
+            first = self.text_format("1. " + str(results[0]), self.font, 65,
+                                     self.green if results[0] == scores else self.white)
+            score1_rect = first.get_rect()
+            self.screen.blit(first, (self.screen_width / 2 - (score1_rect[2] / 2), 280))
+            if len(results) == 2:
+                second = self.text_format("2. " + str(results[1]), self.font, 55,
+                                          self.green if results[1] == scores else self.white)
+                score2_rect = second.get_rect()
+                self.screen.blit(second, (self.screen_width / 2 - (score2_rect[2] / 2), 320))
+            elif len(results) >= 3:
+                second = self.text_format("2. " + str(results[1]), self.font, 55,
+                                          self.green if results[1] == scores else self.white)
+                score2_rect = second.get_rect()
+                self.screen.blit(second, (self.screen_width / 2 - (score2_rect[2] / 2), 320))
+                third = self.text_format("3. " + str(results[2]), self.font, 45,
+                                         self.green if results[2] == scores else self.white)
+                score3_rect = third.get_rect()
+                self.screen.blit(third, (self.screen_width / 2 - (score3_rect[2] / 2), 360))
+
+            best_rect = besttext.get_rect()
             title_rect = title.get_rect()
             start_rect = text_start.get_rect()
             quit_rect = text_quit.get_rect()
+
             self.screen.blit(title, (self.screen_width / 2 - (title_rect[2] / 2), 80))
-            self.screen.blit(text_start, (self.screen_width / 2 - (start_rect[2] / 2), 230))
-            self.screen.blit(text_quit, (self.screen_width / 2 - (quit_rect[2] / 2), 330))
+            self.screen.blit(besttext, (self.screen_width / 2 - (best_rect[2] / 2), 210))
+            self.screen.blit(text_start, (self.screen_width / 2 - (start_rect[2] / 2), 430))
+            self.screen.blit(text_quit, (self.screen_width / 2 - (quit_rect[2] / 2), 480))
             self.pygame.display.flip()
             self.pygame.display.set_caption("Pacman scoreboard")
 
@@ -139,7 +174,7 @@ class Menu():
                             gameMode = False
                         if selected == "pacman":
                             gameMode = False
-                            self.pacmanMode="1"
+                            self.pacmanMode = "1"
 
             self.screen.blit(self.bg, (0, 0))
             title = self.text_format("GAMEMODE", self.font, 130, self.yellow)
@@ -149,6 +184,8 @@ class Menu():
                 text_pacman = self.text_format("pacman", self.font, 75, self.gray)
             if selected == "tanks":
                 text_tanks = self.text_format("tanks", self.font, 75, self.yellow)
+
+
             else:
                 text_tanks = self.text_format("tanks", self.font, 75, self.gray)
 
@@ -160,4 +197,3 @@ class Menu():
             self.screen.blit(text_tanks, (self.screen_width / 2 - (tanks_rect[2] / 2), 330))
             self.pygame.display.flip()
             self.pygame.display.set_caption("Pacman mode")
-
